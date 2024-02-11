@@ -1,0 +1,33 @@
+
+python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
+
+data部分
+DataModuleFromConfig(pl.LightningDataModule):
+basicsr/data/realesrgan_dataset.py
+
+网络
+ldm/modules/diffusionmodules/model.py
+
+loss
+ldm/models/diffusion/ddpm.py
+
+from shared_step
+
+# 得到条件
+FrozenOpenCLIPEmbedder
+
+unet
+DiffusionWrapper
+
+可视化在
+ddpm 
+log_img的decode  recon是autoencoder的对输入z还原  sample是diffusion后decoder还原
+inputs 和 reconstruction 是x输入和gt
+# sft
+EncoderUNetModelWT 下各个TimestepEmbedSequential in ldm/modules/diffusionmodules/openaimodel.py  first call shared_step
+
+# cfw 
+ddpm AutoencoderKLResi 下 Decoder_Mix  <cur_fuse_layer>--< call ldm/modules/diffusionmodules/model.py Fuse_sft_block_RRDB> loss计算用到gan ldm/modules/losses/contperceptual.py LPIPSWithDiscriminator  NLayerDiscriminator 
+
+
+z, c_lq, z_gt, x, gt, yrec, xc

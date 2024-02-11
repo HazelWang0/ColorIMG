@@ -1,0 +1,196 @@
+
+// {
+//     // 使用 IntelliSense 了解相关属性。 
+//     // 悬停以查看现有属性的描述。
+//     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "python": "/root/anaconda3/envs/py38pt1.11/bin/python",
+//             "name": "Python: 当前文件",
+//             "type": "python",
+//             "request": "launch",
+//             "program": "scripts/sr_val_ddpm_text_T_vqganfin_old.py",
+//             // "cwd":"/root/vmip/myProject/ywy/DiffBIR/",
+//             "env": {"CUDA_VISIBLE_DEVICES":"0"},
+//             "args": [  
+//                 "--config", "configs/stableSRNew/v2-finetune_text_T_512.yaml", "--ckpt", "pretrain/stablesr_000117.ckpt", "--vqgan_ckpt", "pretrain/vqgan_cfw_00011.ckpt", "--init-img", "INPUT_PATH", "--outdir", "output", "--ddpm_steps", "200", "--dec_w", "0.5", "--colorfix_type", "adain" ,
+//             ],
+//             "console": "integratedTerminal",
+//             "justMyCode": true
+//         }
+//     ]
+// }
+
+// {
+//     // 使用 IntelliSense 了解相关属性。 
+//     // 悬停以查看现有属性的描述。
+//     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "python": "/root/anaconda3/envs/py38pt1.11/bin/python",
+//             "name": "Python: color_test",
+//             "type": "python",
+//             "request": "launch",
+//             "program": "scripts/sr_val_ddpm_text_T_vqganfin_old.py",
+//             // "cwd":"/root/vmip/myProject/ywy/DiffBIR/",
+//             "env": {"CUDA_VISIBLE_DEVICES":"0"},
+//             "args": [  
+//                 "--config", "configs/stableSRNew/v2-finetune_text_T_512_color.yaml", "--ckpt", "pretrain/color_temp.ckpt", "--vqgan_ckpt", "pretrain/vqgan_cfw_00011.ckpt", "--init-img", "INPUT_PATH", "--outdir", "output_color", "--ddpm_steps", "200", "--dec_w", "0.5", "--colorfix_type", "adain" ,
+//             ],
+//             "console": "integratedTerminal",
+//             "justMyCode": true
+//         }
+//     ]
+// }
+
+
+// {
+//     // 使用 IntelliSense 了解相关属性。 
+//     // 悬停以查看现有属性的描述。
+//     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "python": "/root/anaconda3/envs/py38pt1.11/bin/python",
+//             "name": "Python: color_resume",
+//             "type": "python",
+//             "request": "launch",
+//             "program": "main.py",
+//             // "cwd":"/root/vmip/myProject/ywy/DiffBIR/",
+//             "env": {"CUDA_VISIBLE_DEVICES":"0"},
+//             "args": [  
+//                 "--train", "--base", "configs/stableSRNew/v2-finetune_text_T_512_color.yaml", "--resume", "logs/2024-01-11T04-32-41_color_test", "--num_gpu", "0,", "--gpus", "0,", "--dist", "False", "--scale_lr", "False" ,
+//             ],
+//             "console": "integratedTerminal",
+//             "justMyCode": true
+//         }
+//     ]
+// }
+
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "python": "/root/anaconda3/envs/py38pt1.11/bin/python",
+            "name": "Python: color_resume_1",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            // "cwd":"/root/vmip/myProject/ywy/DiffBIR/",
+            "env": {"CUDA_VISIBLE_DEVICES":"1"},
+            "args": [  
+                "--train", "--base", "configs/stableSRNew/v2-finetune_text_T_512_color.yaml", "--num_gpu", "0,", "--gpus", "0,", "--dist", "False", "--scale_lr", "False" ,
+                // "--resume", "logs/_resume_test/checkpoints/epoch=000016.ckpt", "auto_resume", "true",
+                // "--resume", "logs/_resume_test/checkpoints/last.ckpt", "auto_resume", "true",
+                // "--resume", "logs/2024-02-08T10-33-52_v2-finetune_text_T_512_color/checkpoints/last.ckpt", "auto_resume", "true",
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
+
+// {
+//     // 使用 IntelliSense 了解相关属性。 
+//     // 悬停以查看现有属性的描述。
+//     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "python": "/root/anaconda3/envs/py38pt1.11/bin/python",
+//             "name": "Python: gen_color",
+//             "type": "python",
+//             "request": "launch",
+//             "program": "scripts/generate_vqgan_data_color.py",
+//             "env": {"CUDA_VISIBLE_DEVICES":"1"},
+//             "args": [  
+//                 "--config", "configs/stableSRdata/test_data_color.yaml", "--ckpt", "logs/2024-01-11T04-32-41_color_test/checkpoints/epoch=000004-v19.ckpt", "--outdir", "OUTDIR", "--skip_grid", "--ddpm_steps", "200", "--base_i", "0", "--seed", "10000",
+//             ],
+//             "console": "integratedTerminal",
+
+//             "justMyCode": true
+//         }
+//     ]
+// }
+
+
+
+// {
+//     // 使用 IntelliSense 了解相关属性。 
+//     // 悬停以查看现有属性的描述。
+//     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "python": "/root/anaconda3/envs/py38pt1.11/bin/python",
+//             "name": "Python: 当前文件",
+//             "type": "python",
+//             "request": "launch",
+//             "program": "main.py",
+//             // "cwd":"/root/vmip/myProject/ywy/DiffBIR/",
+//             "env": {"CUDA_VISIBLE_DEVICES":"0"},
+//             "args": [  
+//                 "--train", "--base", "configs/stableSRNew/v2-finetune_text_T_512.yaml", "--num_gpu", "0,", "--gpus", "0,", "--dist", "False", "--name", "my_color", "--scale_lr", "False" ,
+//             ],
+//             "console": "integratedTerminal",
+//             "justMyCode": true
+//         }
+//     ]
+// }
+
+// {
+//     // 使用 IntelliSense 了解相关属性。 
+//     // 悬停以查看现有属性的描述。
+//     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "python": "/root/anaconda3/envs/py38pt1.11/bin/python",
+//             "name": "Python: 当前文件",
+//             "type": "python",
+//             "request": "launch",
+//             "program": "scripts/generate_vqgan_data.py",
+//             // "cwd":"/root/vmip/myProject/ywy/DiffBIR/",
+//             "env": {"CUDA_VISIBLE_DEVICES":"0"},
+//             "args": [  
+//                 "--config", "configs/stableSRdata/test_data.yaml", "--ckpt", "pretrain/stablesr_000117.ckpt", "--outdir", "OUTDIR", "--skip_grid", "--ddpm_steps", "200", "--base_i", "0", "--seed", "10000",
+//             ],
+//             "console": "integratedTerminal",
+//             "justMyCode": true
+//         }
+//     ]
+// }
+
+
+
+
+
+
+// {
+//     // 使用 IntelliSense 了解相关属性。 
+//     // 悬停以查看现有属性的描述。
+//     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "python": "/root/anaconda3/envs/py38pt1.11/bin/python",
+//             "name": "Python: 当前文件",
+//             "type": "python",
+//             "request": "launch",
+//             "program": "main.py",
+//             // "cwd":"/root/vmip/myProject/ywy/DiffBIR/",
+//             "env": {"CUDA_VISIBLE_DEVICES":"1"},
+//             "args": [  
+//                 "--train", "--base", "configs/autoencoder/autoencoder_kl_64x64x4_resi.yaml", "--gpus", "0,", "--name", "_color_test", "--scale_lr", "False",
+//             ],
+//             "console": "integratedTerminal",
+//             "justMyCode": true
+//         }
+//     ]
+// }
+
