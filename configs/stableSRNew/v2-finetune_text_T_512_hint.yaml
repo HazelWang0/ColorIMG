@@ -43,7 +43,7 @@ model:
         use_spatial_transformer: True
         use_linear_in_transformer: True
         transformer_depth: 1
-        context_dim: 256  #改成256 1024 # if text
+        context_dim: 256 # if hint
         use_checkpoint: False
         legacy: False
         semb_channels: 256
@@ -302,7 +302,7 @@ lightning:
     image_logger:
       target: main.ImageLogger
       params:
-        batch_frequency: 5
+        batch_frequency: 500
         max_images: 4
         increase_log_steps: False
 

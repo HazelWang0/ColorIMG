@@ -31,3 +31,24 @@ ddpm AutoencoderKLResi 下 Decoder_Mix  <cur_fuse_layer>--< call ldm/modules/dif
 
 
 z, c_lq, z_gt, x, gt, yrec, xc
+
+
+# sft 
+ResBlockDual(TimestepBlockDual) 下用spade替代了sft，
+
+# unet中文字的的控制
+SpatialTransformerV2
+
+
+python hf_download.py --model stabilityai/stable-diffusion-2-1 --save_dir ./pretrain/models--stabilityai--stable-diffusion-2-1 --include "v2-1_768-ema-pruned.ckpt"
+python hf_download.py --model stabilityai/stable-diffusion-2-1-base --save_dir ./pretrain/stable-diffusion-2-1 --include "v2-1_512-ema-pruned.ckpt"
+python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512_color.yaml --num_gpu 0 --gpus 0, --scale_lr False
+
+general sr
+# General SR
+python scripts/generate_vqgan_data.py --config configs/stableSRdata/test_data.yaml --ckpt CKPT_PATH --outdir OUTDIR --skip_grid --ddpm_steps 200 --base_i 0 --seed 10000
+
+
+
+train cfw
+python main.py --train --base configs/autoencoder/autoencoder_kl_64x64x4_resi_color.yaml --gpus 0, --name NAME --scale_lr False

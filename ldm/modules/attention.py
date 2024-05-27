@@ -177,17 +177,17 @@ class CrossAttention(nn.Module):
             nn.Dropout(dropout)
         )
 
-    def forward(self, x, context=None, mask=None):
+    def forward(self, x, context=None, mask=None): #x:[4,4096,320] context:[4,3,256]
         h = self.heads
 
         q = self.to_q(x)
-        context = default(context, x)
-        k = self.to_k(context)
+        context = default(context, x) 
+        k = self.to_k(context) # linear 1024->320 torch.Size([4, 77, 320])
         v = self.to_v(context)
 
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
+        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v)) # torch.Size([20, 77, 64])
 
-        sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
+        sim = einsum('b i d, b j d -> b i j', q, k) * self.scale # torch.Size([20, 4096, 77])
 
         if exists(mask):
             mask = rearrange(mask, 'b ... -> b (...)')
@@ -196,11 +196,11 @@ class CrossAttention(nn.Module):
             sim.masked_fill_(~mask, max_neg_value)
 
         # attention, what we cannot get enough of
-        attn = sim.softmax(dim=-1)
+        attn = sim.softmax(dim=-1) # torch.Size([20, 4096, 77])
 
-        out = einsum('b i j, b j d -> b i d', attn, v)
-        out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
-        return self.to_out(out)
+        out = einsum('b i j, b j d -> b i d', attn, v) # 77被约掉了 torch.Size([20, 4096, 64])
+        out = rearrange(out, '(b h) n d -> b n (h d)', h=h) # torch.Size([4, 4096, 320])
+        return self.to_out(out) # final out torch.Size([4, 4096, 320])
 
 class MemoryEfficientCrossAttention(nn.Module):
     # https://github.com/MatthieuTPHR/diffusers/blob/d80b531ff8060ec1ea982b65a1b8df70f73aa67c/src/diffusers/models/attention.py#L223
@@ -403,7 +403,7 @@ class SpatialTransformerV2(nn.Module):
         if self.use_linear:
             x = self.proj_in(x)
         for i, block in enumerate(self.transformer_blocks):
-            x = block(x, context=context[i])
+            x = block(x, context=context[i]) #torch.Size([4, 4096, 320])
         if self.use_linear:
             x = self.proj_out(x)
         x = rearrange(x, 'b (h w) c -> b c h w', h=h, w=w).contiguous()

@@ -4,14 +4,15 @@ python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v
 python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --gpus 0, --name my_color --scale_lr False
 
 python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512_color.yaml --gpus 0, --scale_lr False --resume logs/_resume_test/checkpoints/last.ckpt --gpus 0, --scale_lr False  --dist False 
-CUDA_VISIBLE_DEVICES=1 python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512_color.yaml --gpus 0, --scale_lr False  --dist False 
+CUDA_VISIBLE_DEVICES=1 python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512_color.yaml --gpus 0, --scale_lr False  --dist False  --resume logs/2024-02-09T16-42-28_v2-finetune_text_T_512_color/checkpoints/last.ckpt
+CUDA_VISIBLE_DEVICES=1 python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512_hint.yaml --gpus 0, --scale_lr False  --dist False 
 
 
 # train CFW
 # General SR
 python scripts/generate_vqgan_data.py --config configs/stableSRdata/test_data.yaml --ckpt checkpoints/last.ckpt --outdir OUTDIR --skip_grid --ddpm_steps 200 --base_i 0 --seed 10000
 
-CUDA_VISIBLE_DEVICES=0 python scripts/generate_vqgan_data.py --config configs/stableSRdata/test_data_color.yaml --ckpt logs/2024-01-11T04-32-41_color_test/checkpoints/epoch=000004-v19.ckpt --outdir OUTDIR --skip_grid --ddpm_steps 200 --base_i 0 --seed 10000
+CUDA_VISIBLE_DEVICES=1 python scripts/generate_vqgan_data_color.py --config configs/stableSRdata/test_data_color.yaml --ckpt logs/2024-01-11T04-32-41_color_test/last.ckpt --outdir OUTDIR/val_coco --skip_grid --ddpm_steps 200 --base_i 0 --seed 10000
 
 then
     # data folder 
@@ -36,7 +37,7 @@ python main.py --train --base configs/autoencoder/autoencoder_kl_64x64x4_resi.ya
 # test
 python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
 
-CUDA_VISIBLE_DEVICES=0 python scripts/sr_val_ddpm_text_T_vqganfin_color.py --config configs/stableSRNew/v2-finetune_text_T_512_color.yaml --ckpt logs/2024-01-11T04-32-41_color_test/checkpoints/epoch=000004-v19.ckpt --vqgan_ckpt pretrain/vqgan_cfw_00011.ckpt --init-img INPUT_PATH --outdir output_color --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
+CUDA_VISIBLE_DEVICES=1 python scripts/sr_val_ddpm_text_T_vqganfin_color.py --config configs/stableSRNew/v2-finetune_text_T_512_color.yaml --ckpt logs/2024-01-11T04-32-41_color_test/last.ckpt --vqgan_ckpt pretrain/vqgan_cfw_00011.ckpt --init-img data/data_coco/coco/val2017 --outdir output_color --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
 
 
 # resume

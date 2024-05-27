@@ -754,10 +754,10 @@ if __name__ == "__main__":
 
     # run
     if opt.train:
-        try:
-            trainer.fit(model, data) # LatentDiffusionSRTextWT call <training_step>
-        except Exception:
-            melk()
-            raise
+        # try:
+        trainer.fit(model, data) # LatentDiffusionSRTextWT call <training_step>
+        # except Exception:
+        #     melk()
+        #     raise
     # if not opt.no_test and not trainer.interrupted:
     #     trainer.test(model, data)

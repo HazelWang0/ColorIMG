@@ -166,10 +166,10 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
                 x = layer(x, emb)
             elif isinstance(layer, SpatialTransformer) or isinstance(layer, SpatialTransformerV2):
                 assert context is not None
-                x = layer(x, context)
+                x = layer(x, context) # 第三层 input torch.Size([4, 320, 64, 64])
             elif isinstance(layer, TimestepBlockDual):
                 assert struct_cond is not None
-                x = layer(x, emb, struct_cond)
+                x = layer(x, emb, struct_cond) # 第三层
             elif isinstance(layer, TimestepBlock3cond):
                 assert seg_cond is not None
                 x = layer(x, emb, struct_cond, seg_cond)
@@ -471,20 +471,20 @@ class ResBlockDual(TimestepBlockDual):
             self._forward, (x, emb, s_cond), self.parameters(), self.use_checkpoint
         )
 
-
+    """emb torch.Size([4, 1280]) """
     def _forward(self, x, emb, s_cond):
-        if self.updown:
+        if self.updown: # false
             in_rest, in_conv = self.in_layers[:-1], self.in_layers[-1]
             h = in_rest(x)
             h = self.h_upd(h)
             x = self.x_upd(x)
             h = in_conv(h)
         else:
-            h = self.in_layers(x)
+            h = self.in_layers(x) # torch.Size([4, 320, 64, 64])
         emb_out = self.emb_layers(emb).type(h.dtype)
         while len(emb_out.shape) < len(h.shape):
             emb_out = emb_out[..., None]
-        if self.use_scale_shift_norm:
+        if self.use_scale_shift_norm: # false
             out_norm, out_rest = self.out_layers[0], self.out_layers[1:]
             scale, shift = th.chunk(emb_out, 2, dim=1)
             h = out_norm(h) * (1 + scale) + shift
@@ -492,7 +492,7 @@ class ResBlockDual(TimestepBlockDual):
         else:
             h = h + emb_out
             h = self.out_layers(h)
-        h = self.spade(h, s_cond)
+        h = self.spade(h, s_cond)  # 这里不是用sft
         return self.skip_connection(x) + h
 
 class AttentionBlock(nn.Module):
@@ -1170,7 +1170,7 @@ class UNetModelDualcondV2(nn.Module):
                                 num_head_channels=dim_head,
                                 use_new_attention_order=use_new_attention_order,
                             ) if not use_spatial_transformer else SpatialTransformerV2(
-                                ch, num_heads, dim_head, depth=transformer_depth, context_dim=context_dim,
+                                ch, num_heads, dim_head, depth=transformer_depth, context_dim=context_dim,  # 这里决定了
                                 disable_self_attn=disabled_sa, use_linear=use_linear_in_transformer,
                                 use_checkpoint=use_checkpoint
                             )
@@ -1361,7 +1361,7 @@ class UNetModelDualcondV2(nn.Module):
 
         h = x.type(self.dtype)
         for module in self.input_blocks:
-            h = module(h, emb, context, struct_cond)
+            h = module(h, emb, context, struct_cond) # into
             hs.append(h)
         h = self.middle_block(h, emb, context, struct_cond)
         idx = 0  # 12 -11出BUG
@@ -1555,26 +1555,26 @@ class EncoderUNetModelWT(nn.Module):
     def forward(self, x, timesteps):
         """
         Apply the model to an input batch.
-        :param x: an [N x C x ...] Tensor of inputs.
+        :param x: an [N x C x ...] Tensor of inputs.  torch.Size([4, 4, 64, 64])
         :param timesteps: a 1-D batch of timesteps.
         :return: an [N x K] Tensor of outputs.
         """
-        emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
+        emb = self.time_embed(timestep_embedding(timesteps, self.model_channels)) # 嵌入embed, torch.Size([4, 1024])
 
         result_list = []
         results = {}
-        h = x.type(self.dtype)
+        h = x.type(self.dtype) # torch.Size([4, 4, 64, 64])
         for module in self.input_blocks:
-            last_h = h
-            h = module(h, emb)
+            last_h = h # 第二4->256->256... ->torch.Size([4, 256, 64, 64])->torch.Size([4, 256, 32, 32])->torch.Size([4, 512, 8, 8])
+            h = module(h, emb)  # TimestepEmbedSequential  中由attention tranformer  torch.Size([4, 256, 64, 64])
             if h.size(-1) != last_h.size(-1):
                 result_list.append(last_h)
-        h = self.middle_block(h, emb)
+        h = self.middle_block(h, emb) # h from torch.Size([4, 512, 8, 8])
         result_list.append(h)
 
         assert len(result_list) == len(self.fea_tran)
 
         for i in range(len(result_list)):
-            results[str(result_list[i].size(-1))] = self.fea_tran[i](result_list[i], emb)
+            results[str(result_list[i].size(-1))] = self.fea_tran[i](result_list[i], emb) # 仿射变换， 由ResBlock组成
 
         return results
