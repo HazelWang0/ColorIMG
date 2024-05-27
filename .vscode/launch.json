@@ -137,9 +137,14 @@
             "request": "launch",
             "program": "main.py",
             // "cwd":"/root/vmip/myProject/ywy/DiffBIR/",
-            "env": {"CUDA_VISIBLE_DEVICES":"0"},
+            // "env": {"CUDA_VISIBLE_DEVICES":"0"},
             "args": [  
-                "--train", "--base", "configs/stableSRNew/v2-finetune_text_T_512_color.yaml", "--num_gpu", "0,", "--gpus", "0,", "--dist", "False", "--name", "my_color", "--scale_lr", "False" ,
+                "--train", "--base", "configs/stableSRNew/v2-finetune_text_T_512_color.yaml", "--num_gpu", "2,", "--gpus", "0,1", "False",
+                // "--name", "my_color_2",
+                // "--scale_lr", "False",
+                // "--resume", "logs/_resume_test/checkpoints/epoch=000016.ckpt",
+                //  "auto_resume", "true",
+                // "--train", "--base", "configs/stableSRNew/v2-finetune_text_T_512_color.yaml", "--num_gpu", "0,", "--gpus", "0,", "--dist", "False", "--name", "my_color", "--scale_lr", "False" ,
             ],
             "console": "integratedTerminal",
             "justMyCode": true

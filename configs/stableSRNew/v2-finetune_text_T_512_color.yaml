@@ -44,6 +44,7 @@ model:
         use_linear_in_transformer: True
         transformer_depth: 1
         context_dim: 256  #改成256 1024 # if text
+        # context_dim: 256  #改成256 1024 # if text
         use_checkpoint: False
         legacy: False
         semb_channels: 256

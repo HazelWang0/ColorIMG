@@ -1991,6 +1991,7 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
         # save_img(torch.tensor(cond),'cond')  
         
         return hint, cond
+        # return hint, cond
 
     @torch.no_grad()
     def get_input(self, batch, k=None, return_first_stage_outputs=False, force_c_encode=False,
@@ -2063,12 +2064,13 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
         # x = y[:, [0],...].repeat(1, 3, 1, 1)
         
         """"""
-        mask =nn.functional.interpolate(batch['mask'][None].permute(1,0,2,3).float(), scale_factor=(4), mode="nearest")
+        mask =nn.functional.interpolate(batch['mask'][None].permute(1,0,2,3).float(), scale_factor=(4), mode="nearest") # mask.shape torch.Size([4, 1, 128, 128])
+
         self.patch_size = [4,4]
         
         self.strokes = 256 #16
         sp_img = y.detach().permute(0,2,3,1).cpu().numpy()
-        _x = np.array([self.get_sp(sp_img[i], mask[i][0], y[i]) for i in range(y.size(0))]) # (4, 512, 512, 3)
+        _x = [self.get_sp(sp_img[i], mask[i][0], y[i]) for i in range(y.size(0))] # (4, 512, 512, 3)
         x = np.array([d[0] for d in _x])
         cond = np.array([d[1].numpy() for d in _x]) #(4,256,3)
         x = torch.from_numpy(x).cuda() #[4,3,512,512]
