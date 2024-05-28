@@ -1959,7 +1959,7 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
         if self.use_usm:
             im_gt = usm_sharpener(im_gt)
         im_gt = im_gt.to(memory_format=torch.contiguous_format).float()
-        save_img(im_gt,'img_gt')
+        # save_img(im_gt,'img_gt')
         ori_h, ori_w = im_gt.size()[2:4]
         out = im_gt
         # add noise

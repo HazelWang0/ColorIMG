@@ -54,6 +54,9 @@ import numpy as np
 # if mask tensor bool 
 #mask = mask.float()
 
+
+        
+
 def save_img(img, name, itr = 0, root='_tempt/seg_debug/'):
     pathlib.Path(root).mkdir(parents=True, exist_ok=True) 
     path = os.path.join(root, name+"_{}.png".format(itr))
@@ -75,6 +78,7 @@ def save_img(img, name, itr = 0, root='_tempt/seg_debug/'):
         save_image(img, path)
     else: 
         raise NotImplementedError
+    
 def torch2img(input):
     input_ = input[0]
     input_ = input_.permute(1,2,0)
@@ -336,13 +340,18 @@ class DDPM(pl.LightningModule):
                     print(f"{context}: Restored training weights")
 
     def init_from_ckpt(self, path, ignore_keys=list(), only_model=False):
+        # if 1:
+        if self.is_hint_cond:
+            ignore_keys.append(f'attn2.to_k.weight')
+            ignore_keys.append(f'attn2.to_v.weight')
         sd = torch.load(path, map_location="cpu")
         if "state_dict" in list(sd.keys()):
             sd = sd["state_dict"]
         keys = list(sd.keys())
         for k in keys:
             for ik in ignore_keys:
-                if k.startswith(ik):
+                if k.startswith(ik) or k.endswith(ik):
+                # if k.startswith(ik):
                     print("Deleting key {} from state_dict.".format(k))
                     del sd[k]
         missing, unexpected = self.load_state_dict(sd, strict=False) if not only_model else self.model.load_state_dict(
@@ -1650,6 +1659,9 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
         self.cond_stage_forward = cond_stage_forward
         self.clip_denoised = False
         self.bbox_tokenizer = None
+        
+        #my add 
+        self.is_hint_cond = True if kwargs['unet_config'].params['context_dim'] == 256 else False
 
         self.restarted_from_ckpt = False
         if ckpt_path is not None:
@@ -1980,7 +1992,7 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
         
         return hint, cond
         # return hint, cond
-        
+
     @torch.no_grad()
     def get_input(self, batch, k=None, return_first_stage_outputs=False, force_c_encode=False,
                   cond_key=None, return_original_cond=False, bs=None, val=False, text_cond=[''], return_gt=False, resize_lq=True):
@@ -1994,7 +2006,7 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
             usm_sharpener = USMSharp().cuda()  # do usm sharpening
 
         im_gt = batch['gt'].cuda()
-        if self.use_usm:
+        if self.use_usm: # true
             im_gt = usm_sharpener(im_gt)
         im_gt = im_gt.to(memory_format=torch.contiguous_format).float()
         # save_img(im_gt,'img_gt')
@@ -2046,23 +2058,11 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
             y = y[:bs]
         y = y.to(self.device)
         
-        # # x为黑白图
+        # x为黑白图
+        # x = batch['hint']*2 -1 # my change
+        # x = batch['hint'] # my change
         # x = y[:, [0],...].repeat(1, 3, 1, 1)
-        # encoder_posterior_x = self.encode_first_stage(x)
-        # z = self.get_first_stage_encoding(encoder_posterior_x).detach()
         
-        # encoder_posterior_y = self.encode_first_stage(y)
-        # z_gt = self.get_first_stage_encoding(encoder_posterior_y).detach()
-
-        # xc = None
-        # if self.use_positional_encodings:
-        #     assert NotImplementedError
-        #     pos_x, pos_y = self.compute_latent_shifts(batch)
-        #     c = {'pos_x': pos_x, 'pos_y': pos_y}
-
-        # text c
-
-
         """"""
         mask =nn.functional.interpolate(batch['mask'][None].permute(1,0,2,3).float(), scale_factor=(4), mode="nearest") # mask.shape torch.Size([4, 1, 128, 128])
 
@@ -2072,9 +2072,9 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
         sp_img = y.detach().permute(0,2,3,1).cpu().numpy()
         _x = [self.get_sp(sp_img[i], mask[i][0], y[i]) for i in range(y.size(0))] # (4, 512, 512, 3)
         x = np.array([d[0] for d in _x])
-        # cond = np.array([d[1].numpy() for d in _x]) #(4,256,3)
+        cond = np.array([d[1].numpy() for d in _x]) #(4,256,3)
         x = torch.from_numpy(x).cuda() #[4,3,512,512]
-        # cond = torch.from_numpy(cond).cuda() # torch.Size([4, 256, 3])
+        cond = torch.from_numpy(cond).cuda() # torch.Size([4, 256, 3])
         
         encoder_posterior_x = self.encode_first_stage(x)
         z = self.get_first_stage_encoding(encoder_posterior_x).detach() #[4,4,64,64]
@@ -2100,7 +2100,7 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
         # save_img(x, 'hint')
         
         
-        out = [z, text_cond]
+        out = [z, text_cond, cond]
         out.append(z_gt)
 
         if return_first_stage_outputs: # false
@@ -2108,23 +2108,6 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
             out.extend([x, self.gt, xrec])
         if return_original_cond: # false
             out.append(xc)
-
-
-        out = [z, text_cond]
-        out.append(z_gt)
-
-        if return_first_stage_outputs: # false
-            xrec = self.decode_first_stage(z_gt)
-            out.extend([x, self.gt, xrec])
-        if return_original_cond: # false
-            out.append(xc)
-
-        text_cond = batch['sentence']
-        while len(text_cond) < z.size(0):
-            text_cond.append(text_cond[-1])
-        if len(text_cond) > z.size(0):
-            text_cond = text_cond[:z.size(0)]
-        assert len(text_cond) == z.size(0)
 
         return out
 
@@ -2291,11 +2274,11 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
 
     def shared_step(self, batch, **kwargs):
         '''main'''
-        x, c, gt = self.get_input(batch, self.first_stage_key)
-        loss = self(x, c, gt)
+        x, c, cond, gt = self.get_input(batch, self.first_stage_key) #x是z,c是text，cond是hint，gt是z_gt
+        loss = self(x, c, gt, cond)
         return loss
 
-    def forward(self, x, c, gt, *args, **kwargs):
+    def forward(self, x, c, gt, cond, *args, **kwargs):
         index = np.random.randint(0, self.num_timesteps, size=x.size(0)) # 随机整数
         t = torch.from_numpy(index)
         t = t.to(self.device).long()
@@ -2308,7 +2291,8 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
             if self.cond_stage_trainable:
                 c = self.get_learned_conditioning(c)
             else: # into
-                c = self.cond_stage_model(c) # FrozenOpenCLIPEmbedder 得到文字embedding
+                c = cond.permute(0,2,1) # torch.Size([4, 3, 256])
+                # c = self.cond_stage_model(c) # FrozenOpenCLIPEmbedder 得到文字embedding
             if self.shorten_cond_schedule:  # TODO: drop this option
                 print(s)
                 tc = self.cond_ids[t].to(self.device)
@@ -2316,7 +2300,16 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
         if self.test_gt:
             struc_c = self.structcond_stage_model(gt, t_ori)  # EncoderUNetModelWT 对unet输入编码
         else: # into
-            struc_c = self.structcond_stage_model(x, t_ori)
+            
+            struc_c = self.structcond_stage_model(x, t_ori)  #dict
+            '''cond torch.Size([4, 77, 1024]) t = t_ori tensor([458, 832, 228, 940], device='cuda:0')'''
+            '''
+            struc_c: 
+            '64': torch.Size([4, 256, 64, 64])
+            '32': torch.Size([4, 256, 32, 32])
+            '16': torch.Size([4, 256, 16, 16])
+            '8':  torch.Size([4, 256, 8, 8])
+            '''
         return self.p_losses(gt, c, struc_c, t, t_ori, x, *args, **kwargs)
 
     def _rescale_annotations(self, bboxes, crop_coordinates):  # TODO: move to dataset
@@ -3132,7 +3125,7 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
         use_ddim = ddim_steps is not None
 
         log = dict()
-        z, text_cond, z_gt, x, gt, yrec, xc = self.get_input(batch, self.first_stage_key,
+        z, text_cond, cond, z_gt, x, gt, yrec, xc = self.get_input(batch, self.first_stage_key,
                                            return_first_stage_outputs=True,
                                            force_c_encode=True,
                                            return_original_cond=True,
@@ -3150,8 +3143,12 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
             log["inputs"] = x
             log["reconstruction"] = gt
             log["recon_lq"] = self.decode_first_stage(z)
+            log["text"] = text_cond
 
-        c = self.cond_stage_model(text_cond)
+        if self.is_hint_cond:
+            c = cond.permute(0,2,1)
+        else:
+            c = self.cond_stage_model(text_cond)
         if self.test_gt:
             struct_cond = z_gt
         else:
@@ -3188,6 +3185,10 @@ class LatentDiffusionSRTextWTCOCO(DDPM):
                 samples, z_denoise_row = self.sample(cond=c, struct_cond=struct_cond, batch_size=N, timesteps=cur_time_step, return_intermediates=True, time_replace=self.time_replace)
             x_samples = self.decode_first_stage(samples)
             log["samples"] = x_samples
+            # import torchvision
+            # save_img(x_samples,f'{text_cond[0]}')
+            # save_img(x_samples,f'{text_cond}')
+            
             if plot_denoise_rows:
                 denoise_grid = self._get_denoise_row_from_list(z_denoise_row)
                 log["denoise_row"] = denoise_grid

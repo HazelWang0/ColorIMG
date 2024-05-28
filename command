@@ -40,5 +40,9 @@ python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v
 CUDA_VISIBLE_DEVICES=1 python scripts/sr_val_ddpm_text_T_vqganfin_color.py --config configs/stableSRNew/v2-finetune_text_T_512_color.yaml --ckpt logs/2024-01-11T04-32-41_color_test/last.ckpt --vqgan_ckpt pretrain/vqgan_cfw_00011.ckpt --init-img data/data_coco/coco/val2017 --outdir output_color --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
 
 
+
+
+# hint 0528
 # resume
-python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --gpus 0, --resume pretrain/stablesr_000117.ckpt --scale_lr False
+# python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --gpus 0, --resume pretrain/stablesr_000117.ckpt --scale_lr False
+CUDA_VISIBLE_DEVICES=0 python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512_color.yaml --gpus 0, False --resume logs/_resume_test0528/checkpoints/epoch=000018.ckpt --scale_lr False 

@@ -43,7 +43,7 @@ model:
         use_spatial_transformer: True
         use_linear_in_transformer: True
         transformer_depth: 1
-        context_dim: 256  #改成256 1024 # if text
+        context_dim: 1024 #改成256 1024 # if text
         # context_dim: 256  #改成256 1024 # if text
         use_checkpoint: False
         legacy: False
@@ -161,13 +161,13 @@ degradation:
 data:
   target: main.DataModuleFromConfig
   params:
-    batch_size: 4
+    batch_size: 8
     num_workers: 0
     wrap: false
     train:
       target: basicsr.data.coco_dataloader.COCODataset
       params:
-        queue_size: 180
+        queue_size: 200
         coco_path: data/data_coco/coco/train2017
         gt_path: data/data_coco/json/selected_train.json
         num_face: 10000
@@ -175,7 +175,7 @@ data:
         io_backend:
           type: disk
           
-        batch_size: 4
+        batch_size: 8
         mode_prob:
           block: 0.0
           full: 0.05
@@ -206,7 +206,7 @@ data:
 
         final_sinc_prob: 0.8
 
-        batch_size: 4
+        batch_size: 8
         mode_prob:
           block: 0.0
           full: 0.05
@@ -234,7 +234,7 @@ data:
         io_backend:
           type: disk
 
-        batch_size: 4
+        batch_size: 8
         mode_prob:
           block: 0.0
           full: 0.05
@@ -303,7 +303,7 @@ lightning:
     image_logger:
       target: main.ImageLogger
       params:
-        batch_frequency: 5
+        batch_frequency: 100
         max_images: 4
         increase_log_steps: False
 

@@ -52,3 +52,11 @@ python scripts/generate_vqgan_data.py --config configs/stableSRdata/test_data.ya
 
 train cfw
 python main.py --train --base configs/autoencoder/autoencoder_kl_64x64x4_resi_color.yaml --gpus 0, --name NAME --scale_lr False
+
+
+
+# 5.28
+不用训练cfw
+如果resume logs/_resume_test下的结果，都是正常的
+开启test模式，就把main.py 的ImageLogger中log_first_step设为true,然后把config文件的batch_frequency（决定log_frequency）改成100而不是5，则每一步都会val一遍，相当于跑推理，正常训练就关闭
+    已知多gpu模式得设置num_workers非0，否则报错后无法训练

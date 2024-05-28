@@ -293,7 +293,7 @@ class SetupCallback(Callback):
 
 class ImageLogger(Callback):
     def __init__(self, batch_frequency, max_images, clamp=True, increase_log_steps=True,
-                 rescale=True, disabled=False, log_on_batch_idx=False, log_first_step=True,
+                 rescale=True, disabled=False, log_on_batch_idx=False, log_first_step=False,
                  log_images_kwargs=None):
         super().__init__()
         self.rescale = rescale
@@ -361,7 +361,7 @@ class ImageLogger(Callback):
             if os.path.exists(json_dir):
                 exist_json = json.load(open(json_dir))
             else:
-                os.makedirs(os.path.dirname(json_dir))
+                os.makedirs(os.path.dirname(json_dir), exist_ok=True)
                 exist_json = []
             
             
@@ -380,7 +380,10 @@ class ImageLogger(Callback):
                     if self.clamp:
                         images[k] = torch.clamp(images[k], -1., 1.)
                         
-            del images['text']
+            try:
+                del images['text']
+            except:
+                pass
             self.log_local(pl_module.logger.save_dir, split, images,
                            pl_module.global_step, pl_module.current_epoch, batch_idx)
 
